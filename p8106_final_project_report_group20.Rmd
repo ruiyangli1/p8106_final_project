@@ -1,0 +1,553 @@
+---
+title: "Predicting Crime Rate Within Boston Area"
+author: "Group 20"
+date: "5/13/2021"
+output: pdf_document
+--- 
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE, cache = TRUE)
+
+library(tidyverse)
+library(gtsummary)
+library(summarytools)
+library(kableExtra)
+library(caret)
+library(corrplot)
+library(patchwork)
+library(rpart.plot)    # for visualization, tree diagrams
+
+theme_set(theme_bw())
+```
+
+
+
+# Introduction
+
+## Motivation 
+
+Public safety has always been one of the most concerns in our daily lives. A safe environment with a low crime rate not only protects us from injury and illness but also helps us improve our overall quality of life. Further, reducing crimes can lead to a decrease in societal costs and, as a result, generate substantial economic benefits. Therefore, in this project, we would like to identify the influential factors that could potentially predict the crime rate and hopefully provide insight for future policy to improve population safety. Specifically, we focus on the per capita crime rate within the Boston area. The overall goal of this project is to predict the crime rate and identify the important predicting variables as well as understand their impact on population safety.
+
+## Data
+
+The dataset that we used in this project can be assessed from the StatLib library which is maintained at Carnegie Mellon University. It contains information about various factors that could potentially explain crime rate from 506 observations. This dataset has already been cleaned. The detailed description of each variables is displayed in Table 1. The outcome of interest is the per capita crime rate. 
+
+We randomly split our dataset into a training dataset (75%) and a test dataset (25%). We performed model fitting and model selection on the training dataset and evaluated its test performance on the test dataset. 
+
+There were no missing or duplicated observations in our data and the distribution of each predictor variable can be seen in Figure 1. After careful consideration, we decided not to perform transformations in order to maintain the interpretability of the predictors.
+
+```{r 1.df}
+# Import dataset
+data0 = read_csv("./data/housing.csv")
+
+data = data0 %>%
+  mutate(CHAS = factor(CHAS,
+                       levels = c(0,1),
+                       labels = c("tract bounds river","otherwise")))
+  
+
+label(data$CRIM) <- "Crime Rate"
+label(data$ZN) <- "Zone"
+label(data$INDUS) <- "Non-retail Business"
+label(data$CHAS) <- "Charles River"
+label(data$NOX) <- "Nitric Oxide"
+label(data$RM) <- "Room"
+label(data$AGE) <- "Age"
+label(data$DIS) <- "Distance"
+label(data$RAD) <- "Radial Highways"
+label(data$TAX) <- "Tax"
+label(data$PTRATIO) <- "Pupil/teacher"
+label(data$B) <- "Blacks"
+label(data$LSTAT) <- "Low Status"
+label(data$MEDV) <- "Median home value (in 1k)"
+```
+
+```{r 1.var_descpt}
+# Variable description
+
+var = data.frame(
+  Variable = colnames(data), 
+  Description = 
+    c('per capita crime rate by town',
+      'proportion of residential land zoned for lots over 25,000 sq.ft.',
+      'proportion of non-retail business acres per town',
+      'Charles River dummy variable (= 1 if tract bounds river; 0 otherwise)',
+      'nitrogen oxides concentration (parts per 10 million)',
+      'average number of rooms per dwelling',
+      'proportion of owner-occupied units built prior to 1940',
+      'weighted distances to five Boston employment centres',
+      'index of accessibility to radial highways',
+      'full-value property-tax rate per $10,000',
+      'pupil-teacher ratio by town',
+      '1000(Bk - 0.63)^2 where Bk is the proportion of blacks by town',
+      '% lower status of the population',
+      'Median value of owner-occupied homes in $1000s')) %>% 
+  arrange(Variable)
+  
+var_descpt = 
+  kbl(var, booktabs = T) %>% 
+  kable_styling(full_width = T,
+                latex_options = c("HOLD_position")) %>% 
+  column_spec(1, width = "5cm")
+```
+
+```{r 1.descpt_stt_(optional)}
+# optional
+descpt_stt =
+   data %>% 
+  select(var$Variable) %>% 
+  tbl_summary(
+    type = all_continuous() ~ "continuous2",
+    statistic = all_continuous() ~ c("{mean} ({sd})", "{median} ({p25}, {p75})", "{min}, {max}")) %>% 
+  bold_labels() %>% 
+  italicize_levels() %>% 
+  as_gt()
+```
+
+```{r 1.train_test_df}
+# Split dataset
+
+set.seed(20210323)
+trRows = createDataPartition(data$CRIM, p = .75, list = F)
+
+data_train = data[trRows,]
+data_test = data[-trRows,]
+
+x <- model.matrix(CRIM ~ ., data_train)[ ,-1] 
+x_test <- model.matrix(CRIM ~ ., data_test)[ ,-1] 
+
+y <- data_train$CRIM
+y_test <- data_test$CRIM
+```
+
+```{r 1.var_distn}
+
+#dfSummary(data, graph.magnif = 0.75)
+
+# Check for missing values
+#sum(is.na(data))
+# Check for duplicated values
+#sum(duplicated(data))
+
+var_distn = 
+  data0[trRows,] %>%
+  mutate(CHAS = factor(CHAS,
+                       levels = c(0,1),
+                       labels = c("tract bounds river","otherwise"))) %>% 
+  pivot_longer(-c(CHAS), names_to = "var", values_to = "value") %>% 
+  ggplot(aes(x = value, color = CHAS)) +  
+  facet_wrap(~ var, scales = "free") +
+  geom_density() +
+  labs(x = NULL) + 
+  scale_color_manual(values = c("#999999", "#E69F00", "#56B4E9")) + 
+  theme_bw() 
+```
+
+# Exploratory Analysis/Visualization
+
+From the plot of each predictor versus crime rate (Figure 2), we can see that some variables seem to have nonlinear patterns with crime rate whereas others seem to have linear patterns. Therefore, it is reasonable to consider using non-linear models (e.g., GAM and MARS), tree-based methods (e.g., regression tree and conditional inference tree), and ensemble methods (e.g., random forests and boosting) to fit the data in addition to linear models. 
+
+We also examined the multi-collinearity among predictors. This is because if two predictors are highly correlated, it may undermine the statistical significance of the variable. From the correlation plot (Figure 3), we can observe that there are a number of predictors highly correlated with each other. For example, the per capita crime rate (CRIM) seems to have a high positive correlation with the index of accessibility to radial highways (RAD) and full-value property-tax rate per $10,000 (TAX). The weighted distances to five Boston employment centers (DIS) seem to have a high positive correlation with the proportion of residential land zoned for lots over 25,000 sq.ft. (ZN) and a high negative correlation with the proportion of non-retail business acres per town (INDUS), nitrogen oxideS concentration per 10 million (NOX), and proportion of owner-occupied units built prior to 1940 (AGE). The proportion of non-retail business acres per town (INDUS) and % lower status of the population (LSTAT) seem to be correlated with most predictors except for CHAS.
+
+We will explore more about the predicting abilities of these variables for crime rate in the following Models section. 
+
+```{r 2.var_vs_crim_plt}
+scat_plt = 
+  data0[trRows,] %>% 
+  select(-CHAS) %>% 
+  pivot_longer(
+    -CRIM,
+    names_to = "var", 
+    values_to = "value"
+  ) %>%
+  ggplot(aes(x = value, y = CRIM)) + 
+  geom_point() + 
+  stat_smooth(method = "loess", se = T, col = "#E69F00") + 
+  facet_wrap(~var, scales = "free") + 
+  labs(x = NULL) + 
+  theme_bw()
+
+box_plt = 
+  data[trRows,] %>% 
+  select(CHAS,CRIM) %>%
+  ggplot(aes(x = CHAS,y = CRIM, color = CHAS)) +
+  geom_boxplot() + 
+  facet_wrap(~CHAS, scales = "free") + 
+  labs(x = NULL) + 
+  scale_color_manual(name = "CHAS", 
+                    values = c("#999999", "#E69F00")) +
+  scale_x_discrete(labels = "") + 
+  theme_bw() + 
+  theme(legend.position = "none")
+```
+
+```{r 2.corplot,include=FALSE}
+# check multi-collinearity
+corplt = 
+  corrplot(cor(data0[trRows,]), method = "circle", type = "full", tl.cex = 0.53)
+```
+
+
+# Models
+
+## Model Determination
+
+We used crime rate as our response variable and all the remaining variables as the predictors. Since crime rate is a continuous outcome, we performed the modeling under the regression framework. Our earlier exploratory findings suggested that there seemed to be some non-linear association between the predictors and the outcome. Therefore, we considered both linear and non-linear models during the modeling process. Specifically, we fitted linear models including multiple linear regression, LASSO, ridge, elastic net, principal component regression (PCR), and partial least squares (PLS) model, and non-linear models such as generalized additive model (GAM), multivariate adaptive regression splines (MARS), regression tree, conditional inference tree, random forests, and boosting. 
+
+```{r 3.models,include=FALSE}
+# Model fitting 
+
+# resampling method
+ctrl1 <- trainControl(method = "cv", number = 10)
+
+
+# --- linear model
+set.seed(20210323)
+lm.fit <- train(x, y, method = "lm", trControl = ctrl1)
+
+# prediction
+lm.pred <- predict(lm.fit, newdata = x_test)
+# test error
+lm.mse = mean((lm.pred - y_test)^2)
+
+
+
+# --- ridge 
+set.seed(20210323)
+ridge.fit <- train(x, y,
+                   method = "glmnet",
+                   tuneGrid = expand.grid(alpha = 0, 
+                                          lambda = exp(seq(2,-3,length = 100))),
+                   trControl = ctrl1)
+# select optimal tuning parameter
+ridge.tun.plt = plot(ridge.fit, xTrans = log)
+
+# prediction 
+ridge.pred <- predict(ridge.fit$finalModel, 
+                      newx = x_test, 
+                      s = ridge.fit$bestTune$lambda, 
+                      type = "response")
+# test error
+ridge.mse = mean((ridge.pred - y_test)^2)
+
+
+
+# --- lasso
+set.seed(20210323)
+lasso.fit <- train(x, y,
+                   method = "glmnet",
+                   tuneGrid = expand.grid(alpha = 1, 
+                                          lambda = exp(seq(1,-5,length = 100))),
+                   trControl = ctrl1)
+# select optimal tuning parameter
+lasso.tun.plt = plot(lasso.fit, xTrans = log)
+# prediction 
+lasso.pred <- predict(lasso.fit$finalModel, 
+                      newx = x_test, 
+                      s = lasso.fit$bestTune$lambda, 
+                      type = "response")
+# test error
+lasso.mse = mean((lasso.pred - y_test)^2) 
+# coefficients in the final model
+#lasso_coef = coef(lasso.fit$finalModel, s = lasso.fit$bestTune$lambda)
+
+
+
+# --- Elastic net
+set.seed(20210323)
+enet.fit <- train(x, y,
+                  method = "glmnet",
+                  tuneGrid = expand.grid(alpha = seq(0, 1, length = 5), 
+                                         lambda = exp(seq(-10, -3,
+                                                          length = 50))),
+                  trControl = ctrl1)
+# select optimal tuning parameter
+emet.tun.plt = ggplot(enet.fit)
+
+# prediction 
+enet.pred <- predict(enet.fit$finalModel, 
+                     newx = x_test, 
+                     s = enet.fit$bestTune$lambda, 
+                     type = "response")
+# test error
+enet.mse = mean((enet.pred - y_test)^2) 
+
+
+
+# --- pcr
+set.seed(20210323)
+pcr.fit <- train(x, y,
+                 method = "pcr",
+                 tuneLength = 20,
+                 trControl = ctrl1,
+                 scale = TRUE)
+# select optimal tuning parameter
+pcr.tun.plt = ggplot(pcr.fit, highlight = TRUE)
+
+# predicted y
+pcr.pred <- predict(pcr.fit, newdata = x_test)
+# test error
+pcr.mse = mean((pcr.pred - y_test)^2)
+
+
+
+# --- pls
+set.seed(20210323)
+pls.fit <- train(x, y,
+                 method = "pls",
+                 tuneLength = 20,
+                 trControl = ctrl1,
+                 scale = TRUE)
+# select optimal tuning parameter
+pls.tun.plt = ggplot(pls.fit, highlight = TRUE)
+
+# predicted y
+pls.pred <- predict(pls.fit, newdata = x_test)
+# test error
+pls.mse = mean((pls.pred - y_test)^2)
+
+
+
+# --- GAM model
+set.seed(20210323)
+gam.fit <- train(x, y, 
+                 method = "gam",
+                 trControl = ctrl1)
+#gam.fit$bestTune
+#gam.fit$finalModel
+#summary(gam.fit)
+#plot(gam.fit$finalModel, pages = 2) # plot for s()
+# predicted y
+#gam.pred <- predict(gam.fit$finalModel, newdata = x_test)
+# test error
+#gam.mse = mean((gam.pred - y_test)^2)
+
+
+
+# --- MARS model
+mars_grid <- expand.grid(degree = 1:3, 
+                         nprune = 2:22)
+set.seed(20210323)
+mars.fit <- train(x, y,
+                  method = "earth",
+                  tuneGrid = mars_grid,
+                  trControl = ctrl1)
+# select optimal tuning parameter
+#mars.fit$bestTune
+mars.tun.plt = ggplot(mars.fit)
+
+# predicted y
+mars.pred <- predict(mars.fit$finalModel, newdata = x_test, type = "earth")
+# test error
+mars.mse = mean((mars.pred - y_test)^2)
+
+
+
+# --- regression tree
+set.seed(20210323)
+rpart.fit <- train(CRIM ~ . , 
+                   data_train, 
+                   method = "rpart",
+                   tuneGrid = data.frame(cp = exp(seq(-6,-3, length = 50))),
+                   trControl = ctrl1)
+# select optimal tuning parameter
+#rpart.fit$bestTune
+rpart.tun.plt = ggplot(rpart.fit, highlight = TRUE)
+
+# tree visualization
+rpart.plot(rpart.fit$finalModel)
+# predicted y
+rpart.pred <- predict(rpart.fit, newdata = data_test)
+# test error
+rpart.mse = mean((rpart.pred - y_test)^2)
+
+
+
+# --- conditional inference tree model
+set.seed(20210323)
+ctree.fit <- train(CRIM ~ . ,  
+                   data_train, 
+                   method = "ctree",
+                   tuneGrid = data.frame(
+                     mincriterion = 1 - exp(seq(-5, -3, length = 50))),
+                   trControl = ctrl1)
+# select optimal tuning parameter
+#ctree.fit$bestTune
+ctree.tun.plt = ggplot(ctree.fit, highlight = TRUE)
+
+# tree visualization
+plot(ctree.fit$finalModel)
+# predicted y
+ctree.pred <- predict(ctree.fit, newdata = data_test)
+# test error
+ctree.mse = mean((ctree.pred - y_test)^2)
+
+
+
+# --- random forest (bagging at mtry = 13)
+rf.grid <- expand.grid(mtry = 1:13, # #of selected variable at each split
+                       splitrule = "variance", # use RSS rule to make the split
+                       min.node.size = 1:6)
+set.seed(20210323)
+rf.fit <- train(CRIM ~ . , 
+                data_train, 
+                method = "ranger",
+                tuneGrid = rf.grid,
+                trControl = ctrl1)
+# select optimal tuning parameter
+#rf.fit$bestTune
+rf.tun.plt = ggplot(rf.fit, highlight = TRUE)
+
+# predicted y
+rf.pred <- predict(rf.fit, newdata = data_test)
+# test error
+rf.mse = mean((rf.pred - y_test)^2)
+
+
+
+# --- boosting
+gbm.grid <- expand.grid(n.trees = c(1000,2000,3000), # B
+                        interaction.depth = 1:8, # d
+                        shrinkage = c(0.0008,0.001,0.0012), # lambda
+                        n.minobsinnode = c(13,14)) # min # of obs in terminal nodes
+
+set.seed(20210323)
+gbm.fit <- train(CRIM ~ . , 
+                 data_train,  
+                 method = "gbm", # call gbm
+                 tuneGrid = gbm.grid,
+                 trControl = ctrl1,
+                 verbose = FALSE)
+
+# select optimal tuning parameter
+#gbm.fit$bestTune
+gbm.tun.plt = ggplot(gbm.fit, highlight = TRUE)
+
+# predicted y
+gbm.pred <- predict(gbm.fit, newdata = data_test)
+# test error
+gbm.mse = mean((gbm.pred - y_test)^2)
+```
+
+```{r 3.model_compare}
+### Model comparison
+
+resamp <- resamples(list(lm = lm.fit, 
+                         ridge = ridge.fit, 
+                         lasso = lasso.fit,
+                         enet = enet.fit,
+                         pcr = pcr.fit, 
+                         pls = pls.fit,
+                         gam = gam.fit,
+                         mars = mars.fit,
+                         rpart = rpart.fit,
+                         ctree = ctree.fit,
+                         rf = rf.fit,
+                         gbm = gbm.fit))
+train.rmse = summary(resamp)$values %>% select(matches("RMSE"))
+colnames(train.rmse) = gsub("~RMSE","",colnames(train.rmse))
+
+test_error = 
+  data.frame(
+    model = colnames(train.rmse), 
+    RMSE = c(lm.mse,ridge.mse,lasso.mse,enet.mse,pcr.mse,pls.mse,NA,mars.mse,rpart.mse,ctree.mse,rf.mse,gbm.mse) %>% sqrt() %>% round(2), 
+    test = "test"
+  )
+
+# plot rmse
+model_compare = 
+  train.rmse %>% 
+  pivot_longer(1:12, names_to = "model", 
+               values_to = "RMSE") %>% 
+  ggplot(aes(y = reorder(model, RMSE, median), x = RMSE)) + 
+  geom_boxplot(alpha = 0.3) + 
+  stat_summary(fun = mean, geom = "point", 
+               shape = 1, size = 2) +
+  labs(y = NULL) + 
+  theme_bw() + 
+  theme(legend.position = "none")  + 
+  geom_point(data = test_error, 
+             aes(x = RMSE), color = "#d95f02", 
+             shape = 20, size = 2) + 
+  labs(caption = "Orange point: mean RMSE from test data")
+```
+
+There were one or few tuning parameters for each of the models except the linear regression model. Within these models that require tuning parameters, we specified a grid of numbers and then selected the one that gave the smallest cross-validation error. We then compared each of these models with optimal tuning parameters and decided the final model based on their training performance, i.e., cross-validation RMSE. Both median and mean RMSEs are reasonable evaluation metrics for the selection of the final model. We discussed both metrics and determined the appropriate final model, which would be used to predict the crime rate. 
+
+Figure 4 displays the distribution of the training errors (in black) of each of the models that we considered in this project. We can see that both random forest (rf) model and boosting (gmb) model performed well compared to the other models. Both models have similar performance using the training data; the random forest model has a slightly larger mean RMSE but a smaller median RMSE than the boosting model. As there is extreme value in RMSE, median RMSE can be a more appropriate criterion as it is insensitive to extreme values whereas mean is. Hence, we decided to use the random forest model, which has a smaller median RMSE, as our final model. 
+
+We also evaluated the test performance of the models in the form of mean RMSE as displayed in Figure 4 (in orange). We can observe that among all the models, regression tree (rpart) model has the smallest test error, followed by boosting model (gbm), MARS model (mars), and random forest model (rf). Our selected final model, the random forest model, has its test error (mean RMSE) close to its training error (mean RMSE). This is desirable and it indicates that random forest model seems to have a consistently reliable predictive ability. Therefore, our decision of choosing random forest model looks reasonable and random forest seems to be flexible enough to make the prediction and able to successfully capture the non-linearity between the predictors and the crime rate. 
+
+## Model Interpretation 
+
+By the nature of random forest model, no specific assumption is made with regard to the functional relationship between the response variable and the predictor variables. As blackbox models, the random forest model does not have an explicit form. However, it can be interpreted, both globally and locally, using visualization tools. 
+
+```{r 3.model_visualization}
+
+```
+
+
+[**TO BE MODIFIED**
+Based on the variable importance plot (VIP) in Figure 5 (first plot), RAD, DIS, MEDV, LSTAT, and AGE are the top 5 variables of importance in predicting the crime rate. The partial dependence plots (PDP) (Figure 5) illustrate how these variables impact the prediction of the response variable. For example, PDP of RAD implies that our model found that one knot (at 8) in RAD provides the best fit. Specifically, the per capita crime rate seems to be stable when the index of accessibility to radial highways is below 8 but it starts to increase after the index exceeds 8. Similarly, we can see that the crime rate seems to first decrease with weighted distances to five Boston employment centers (DIS) and remain stable after around 2.20. Overall, the crime rate seems to decrease for the median value of owner-occupied homes, but it decreases fastest when the median value is below 13.8, second fastest when the median value is from 13.8k to 17.4k, and the slowest when the median value exceeds 17.4k. The crime rate seems to decrease with the percentage of the lower status of the population and remaining stable after around 23.24%. ]
+
+# Discussion 
+
+We did not perform transformations on the predictors due to the concern of interpretability. Through transformation might compromise the interpretability, it could possibly improve model performance. Future research could consider applying transformation on predictors. 
+
+[**TO BE MODIFIED** Overall, our model suggests that accessibility to radial highways, distances to employment centers, and the median value of owner-occupied homes are the top 3 variables that play an important role in predicting the crime rate. Specifically, the crime rate is predicted to start to increase with the accessibility to radial highways when the index of latter exceeds 8, to decrease if the distance to employment centers is farther, and to decreases with the median home value overall -- it decreases faster if the median is below 17.4k compared to after 17.4k. These findings are consistent with our natural understanding and expectation and provide meaningful insight into public safety. Therefore, the policymaker or authority might consider making more effort in these forehead mentioned areas to reduce the crime rate and protect the overall population. ]
+
+
+\newpage
+
+# Tables and Figures
+
+__Table 1.__ Variable Description
+```{r var_descpt}
+var_descpt
+```
+
+\pagebreak
+
+```{r var_distn}
+var_distn
+```
+\center __Figure 1__ Variable Distribution (Training Dataset) \center
+
+\pagebreak
+
+```{r ctns_var_vs_crime}
+scat_plt 
+```
+\center __Figure 2A__ Scatter Plot of Continuous Variable vs. Crime Rate (Training Dataset) \center
+
+\pagebreak
+
+```{r cat_var_vs_crime}
+box_plt
+```
+\center __Figure 2B__ Boxplot of Categorical Variable vs. Crime Rate (Training Dataset) \center
+
+\pagebreak
+
+```{r cor_plt}
+corrplot(cor(data0[trRows,]), method = "circle", type = "full", tl.cex = 0.53)
+```
+\center __Figure 3__ Correlation Plot (Training Dataset) \center
+
+\pagebreak
+
+```{r model_compare}
+model_compare
+```
+\center __Figure 4__ Predictive Performance of All Models  \center
+
+\pagebreak
+
+**TO BE ADDED**
+```{r}
+
+```
+\center __Figure 5__ The Variable Importance Plot (VIP), Partial Dependence Plots (PDP), Individual Conditional Expectation (ICE) Curves from Random Forest Model (Final Model) \center
+
+
+
