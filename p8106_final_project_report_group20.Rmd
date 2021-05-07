@@ -581,7 +581,7 @@ We tuned 100 lambda values in between $e$ to $e^{-5}$. From the graphical output
 # --- lasso
 lasso.tun.plt = plot(lasso.fit, xTrans = log); lasso.tun.plt
 ```
-\center __Figure 1__ Tuning Lamda of Lasso Model \center
+\center __Figure 2__ Tuning Lamda of Lasso Model \center
 
 \pagebreak
 
@@ -593,7 +593,7 @@ We tuned 5 alpha values in between 0 to 1, and tuned 50 lambda values in between
 # --- Elastic net
 emet.tun.plt = ggplot(enet.fit); emet.tun.plt
 ```
-\center __Figure 1__ Tuning alpha and Lamda of Elastic Net Model \center
+\center __Figure 3__ Tuning alpha and Lamda of Elastic Net Model \center
 
 \pagebreak
 
@@ -605,7 +605,7 @@ We tuned 12 components and the following graph shows the optimal components numb
 # --- pcr
 pcr.tun.plt = ggplot(pcr.fit, highlight = TRUE); pcr.tun.plt
 ```
-\center __Figure 1__ Tuning Optimal Components of PCR Model \center
+\center __Figure 4__ Tuning Optimal Components of PCR Model \center
 
 \pagebreak
 
@@ -617,7 +617,7 @@ We tuned 12 components and the following graph shows the optimal components numb
 # --- pls
 pls.tun.plt = ggplot(pls.fit, highlight = TRUE); pls.tun.plt
 ```
-\center __Figure 1__ Tuning Optimal Components of PLS Model \center
+\center __Figure 5__ Tuning Optimal Components of PLS Model \center
 
 \pagebreak
 
@@ -625,19 +625,15 @@ pls.tun.plt = ggplot(pls.fit, highlight = TRUE); pls.tun.plt
 
 The GAM model did not provide us the way to tune the parameter. The function automatically returned the most optimal model.
 
-\pagebreak
-
 ## 8. MARS Model
 
 We tuned the degree from 1 to 3 and the value of nprune from 2 to 22. The best model with the smallest cross-validation RMSE is with nprune = 9 and degree = 2.
 
 ```{r}
-# --- GAM model
-
 # --- MARS model
 mars.tun.plt = ggplot(mars.fit); mars.tun.plt
 ```
-\center __Figure 1__ Tuning MARS Model \center
+\center __Figure 6__ Tuning MARS Model \center
 
 \pagebreak
 
@@ -649,7 +645,7 @@ We tuned 50 Complexity Parameters from $e^{-6}$ to $e^{-3}$. The model with the 
 # --- regression tree
 rpart.tun.plt = ggplot(rpart.fit, highlight = TRUE); rpart.tun.plt
 ```
-\center __Figure 1__ Tuning Complexity Parameter of Regression Tree Model \center
+\center __Figure 7__ Tuning Complexity Parameter of Regression Tree Model \center
 
 \pagebreak
 
@@ -660,9 +656,9 @@ We tuned the 50 mincriterion values from $1 - e^{-5}$ to $1 - e^{-3}$. The model
 ```{r}
 # --- conditional inference tree model
 ctree.tun.plt = ggplot(ctree.fit, highlight = TRUE); ctree.tun.plt
-ctree.fit$bestTune
+# ctree.fit$bestTune
 ```
-\center __Figure 1__ Tuning Mincriterion of Conditional Inference Tree Model \center
+\center __Figure 8__ Tuning Mincriterion of Conditional Inference Tree Model \center
 
 \pagebreak
 
@@ -674,9 +670,9 @@ We tuned number of selected variable at each split from 1 to 13, and tuned the m
 ```{r}
 # --- random forest (bagging at mtry = 13)
 rf.tun.plt = ggplot(rf.fit, highlight = TRUE); rf.tun.plt
-rf.fit$bestTune
+# rf.fit$bestTune
 ```
-\center __Figure 1__ Tuning Random Forest Model \center
+\center __Figure 9__ Tuning Random Forest Model \center
 
 \pagebreak
 
@@ -689,7 +685,7 @@ The model with the smallest cross-validation RMSE is with n.trees = 2000, intera
 ```{r}
 # --- boosting
 gbm.tun.plt = ggplot(gbm.fit, highlight = TRUE); gbm.tun.plt
-gbm.fit$bestTune
+# gbm.fit$bestTune
 ```
-\center __Figure 1__ Tuning Boosting Model \center
+\center __Figure 10__ Tuning Boosting Model \center
 
