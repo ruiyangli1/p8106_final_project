@@ -2,7 +2,9 @@
 title: "Predicting Crime Rate Within Boston Area"
 author: "Group 20"
 date: "5/13/2021"
-output: pdf_document
+output: 
+  pdf_document: 
+    latex_engine: xelatex
 --- 
 
 ```{r setup, include=FALSE}
@@ -554,7 +556,7 @@ model_compare
 
 ## 1. Linear Model
 
-Since Linear Model has a closed form solution, there is no parameter we have to tune.
+Since Linear Model has a closed form solution, we did not need to tune parameters for this model.
 
 ## 2. Ridge Model
 
@@ -647,7 +649,7 @@ rpart.tun.plt = ggplot(rpart.fit, highlight = TRUE); rpart.tun.plt
 ```
 \center __Figure 7__ Tuning Complexity Parameter of Regression Tree Model \center
 
-\pagebreak
+\newpage
 
 ## 10. Conditional Inference Tree Model
 
@@ -662,7 +664,7 @@ ctree.tun.plt = ggplot(ctree.fit, highlight = TRUE); ctree.tun.plt
 
 \pagebreak
 
-## 11. Random Forest Model
+<p align="left">诶嘿</p>## 11. Random Forest Model
 
 We tuned number of selected variable at each split from 1 to 13, and tuned the minimum node size from 
 1 to 6. The model with the smallest cross-validation RMSE is with number of selected variable at each split equal to 1 and minimum node size equal to 4.
