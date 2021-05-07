@@ -403,8 +403,6 @@ rf.pred <- predict(rf.fit, newdata = data_test)
 # test error
 rf.mse = mean((rf.pred - y_test)^2)
 
-
-
 # --- boosting
 gbm.grid <- expand.grid(n.trees = c(1000,2000,3000), # B
                         interaction.depth = 1:8, # d
@@ -550,4 +548,74 @@ model_compare
 \center __Figure 5__ The Variable Importance Plot (VIP), Partial Dependence Plots (PDP), Individual Conditional Expectation (ICE) Curves from Random Forest Model (Final Model) \center
 
 
+\newpage
+
+# Appendix of Model Tuning
+
+```{r}
+set.seed(20210323)
+# select optimal tuning parameter
+
+# --- linear model
+
+# --- ridge 
+ridge.tun.plt = plot(ridge.fit, xTrans = log); ridge.tun.plt
+```
+\center __Figure 1__ Tuning Lamda of Ridge Model \center
+
+```{r}
+# --- lasso
+lasso.tun.plt = plot(lasso.fit, xTrans = log); lasso.tun.plt
+```
+\center __Figure 1__ Tuning Lamda of Lasso Model \center
+
+```{r}
+# --- Elastic net
+emet.tun.plt = ggplot(enet.fit); emet.tun.plt
+```
+\center __Figure 1__ Tuning alpha and Lamda of Elastic Net Model \center
+
+```{r}
+# --- pcr
+pcr.tun.plt = ggplot(pcr.fit, highlight = TRUE); pcr.tun.plt
+```
+\center __Figure 1__ Tuning Optimal Components of PCR Model \center
+
+```{r}
+# --- pls
+pls.tun.plt = ggplot(pls.fit, highlight = TRUE); pls.tun.plt
+```
+\center __Figure 1__ Tuning Optimal Components of PLS Model \center
+
+```{r}
+# --- GAM model
+
+# --- MARS model
+mars.tun.plt = ggplot(mars.fit); mars.tun.plt
+```
+\center __Figure 1__ Tuning MARS Model \center
+
+```{r}
+# --- regression tree
+rpart.tun.plt = ggplot(rpart.fit, highlight = TRUE); rpart.tun.plt
+```
+\center __Figure 1__ Tuning Complexity Parameter of Regression Tree Model \center
+
+```{r}
+# --- conditional inference tree model
+ctree.tun.plt = ggplot(ctree.fit, highlight = TRUE); ctree.tun.plt
+```
+\center __Figure 1__ Tuning Mincriterion of Conditional Inference Tree Model \center
+
+```{r}
+# --- random forest (bagging at mtry = 13)
+rf.tun.plt = ggplot(rf.fit, highlight = TRUE); rf.tun.plt
+```
+\center __Figure 1__ Tuning Random Forest Model \center
+
+```{r}
+# --- boosting
+gbm.tun.plt = ggplot(gbm.fit, highlight = TRUE); gbm.tun.plt
+```
+\center __Figure 1__ Tuning Boosting Model \center
 
