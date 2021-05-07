@@ -278,7 +278,7 @@ enet.mse = mean((enet.pred - y_test)^2)
 set.seed(20210323)
 pcr.fit <- train(x, y,
                  method = "pcr",
-                 tuneLength = 20,
+                 tuneGrid = data.frame(ncomp = 1:13),
                  trControl = ctrl1,
                  scale = TRUE)
 # select optimal tuning parameter
@@ -295,7 +295,7 @@ pcr.mse = mean((pcr.pred - y_test)^2)
 set.seed(20210323)
 pls.fit <- train(x, y,
                  method = "pls",
-                 tuneLength = 20,
+                 tuneGrid = data.frame(ncomp = 1:13),
                  trControl = ctrl1,
                  scale = TRUE)
 # select optimal tuning parameter
@@ -552,6 +552,14 @@ model_compare
 
 # Appendix of Model Tuning
 
+## 1. Linear Model
+
+Since Linear Model has a closed form solution, there is no parameter we have to tune.
+
+## 2. Ridge Model
+
+We tuned 100 lambda values in between $e^2$ to $e^{-3}$. From the graphical output below, the lambda value with the smallest cross-validation RMSE lies between 0 and 1.
+
 ```{r}
 set.seed(20210323)
 # select optimal tuning parameter
@@ -563,11 +571,23 @@ ridge.tun.plt = plot(ridge.fit, xTrans = log); ridge.tun.plt
 ```
 \center __Figure 1__ Tuning Lamda of Ridge Model \center
 
+\pagebreak
+
+## 3. Lasso Model
+ 
+We tuned 100 lambda values in between $e$ to $e^{-5}$. From the graphical output below, the best lambda value with the smallest cross-validation RMSE lies between -1 to 0.
+
 ```{r}
 # --- lasso
 lasso.tun.plt = plot(lasso.fit, xTrans = log); lasso.tun.plt
 ```
 \center __Figure 1__ Tuning Lamda of Lasso Model \center
+
+\pagebreak
+
+## 4. Elastic Net 
+
+We tuned 5 alpha values in between 0 to 1, and tuned 50 lambda values in between $e^{-10}$ to $e^{-3}$. From the graphical output below we can see alpha = 0 (ridge model) has significant lower cross-validation RMSE compared with other alpha values.
 
 ```{r}
 # --- Elastic net
@@ -575,17 +595,41 @@ emet.tun.plt = ggplot(enet.fit); emet.tun.plt
 ```
 \center __Figure 1__ Tuning alpha and Lamda of Elastic Net Model \center
 
+\pagebreak
+
+## 5. PCR Model
+
+We tuned 12 components and the following graph shows the optimal components number is 8.
+
 ```{r}
 # --- pcr
 pcr.tun.plt = ggplot(pcr.fit, highlight = TRUE); pcr.tun.plt
 ```
 \center __Figure 1__ Tuning Optimal Components of PCR Model \center
 
+\pagebreak
+
+## 6. PLS Model
+
+We tuned 12 components and the following graph shows the optimal components number is 10.
+
 ```{r}
 # --- pls
 pls.tun.plt = ggplot(pls.fit, highlight = TRUE); pls.tun.plt
 ```
 \center __Figure 1__ Tuning Optimal Components of PLS Model \center
+
+\pagebreak
+
+## 7. GAM
+
+The GAM model did not provide us the way to tune the parameter. The function automatically returned the most optimal model.
+
+\pagebreak
+
+## 8. MARS Model
+
+We tuned the degree from 1 to 3 and the value of nprune from 2 to 22. The best model with the smallest cross-validation RMSE is with nprune = 9 and degree = 2.
 
 ```{r}
 # --- GAM model
@@ -595,27 +639,57 @@ mars.tun.plt = ggplot(mars.fit); mars.tun.plt
 ```
 \center __Figure 1__ Tuning MARS Model \center
 
+\pagebreak
+
+## 9. Regression Tree Model
+
+We tuned 50 Complexity Parameters from $e^{-6}$ to $e^{-3}$. The model with the smallest cross-validation RMSE is with cp = 0.01376379.
+
 ```{r}
 # --- regression tree
 rpart.tun.plt = ggplot(rpart.fit, highlight = TRUE); rpart.tun.plt
 ```
 \center __Figure 1__ Tuning Complexity Parameter of Regression Tree Model \center
 
+\pagebreak
+
+## 10. Conditional Inference Tree Model
+
+We tuned the 50 mincriterion values from $1 - e^{-5}$ to $1 - e^{-3}$. The model with the smallest cross-validation RMSE is with mincriterion = 0.9779915.
+
 ```{r}
 # --- conditional inference tree model
 ctree.tun.plt = ggplot(ctree.fit, highlight = TRUE); ctree.tun.plt
+ctree.fit$bestTune
 ```
 \center __Figure 1__ Tuning Mincriterion of Conditional Inference Tree Model \center
+
+\pagebreak
+
+## 11. Random Forest Model
+
+We tuned number of selected variable at each split from 1 to 13, and tuned the minimum node size from 
+1 to 6. The model with the smallest cross-validation RMSE is with number of selected variable at each split equal to 1 and minimum node size equal to 4.
 
 ```{r}
 # --- random forest (bagging at mtry = 13)
 rf.tun.plt = ggplot(rf.fit, highlight = TRUE); rf.tun.plt
+rf.fit$bestTune
 ```
 \center __Figure 1__ Tuning Random Forest Model \center
+
+\pagebreak
+
+## 12. Boosting Model
+
+We tuned number of trees with value equal to 1000, 2000 and 3000, tuned interaction depth with value in between 1 to 8, tuned shrinkage value equal to 0.0008, 0.001, and 0.0012, and tuned minimum number of observations in terminal nodes equal to 13 and 14. 
+
+The model with the smallest cross-validation RMSE is with n.trees = 2000, interaction.depth = 8, shrinkage = 0.001, and n.minobsinnode = 14.
 
 ```{r}
 # --- boosting
 gbm.tun.plt = ggplot(gbm.fit, highlight = TRUE); gbm.tun.plt
+gbm.fit$bestTune
 ```
 \center __Figure 1__ Tuning Boosting Model \center
 
