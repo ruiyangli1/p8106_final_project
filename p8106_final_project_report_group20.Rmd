@@ -175,7 +175,6 @@ box_plt =
   ggplot(aes(x = CHAS,y = CRIM, color = CHAS)) +
   geom_boxplot() + 
   facet_wrap(~CHAS, scales = "free") + 
-  labs(x = NULL) + 
   scale_color_manual(name = "CHAS", 
                     values = c("#999999", "#E69F00")) +
   scale_x_discrete(labels = "") + 
@@ -222,6 +221,7 @@ ridge.fit <- train(x, y,
                                           lambda = exp(seq(2,-3,length = 100))),
                    trControl = ctrl1)
 # select optimal tuning parameter
+#ridge.fit$bestTune$lambda
 ridge.tun.plt = plot(ridge.fit, xTrans = log)
 
 # prediction 
@@ -242,6 +242,7 @@ lasso.fit <- train(x, y,
                                           lambda = exp(seq(1,-5,length = 100))),
                    trControl = ctrl1)
 # select optimal tuning parameter
+#lasso.fit$bestTune$lambda
 lasso.tun.plt = plot(lasso.fit, xTrans = log)
 # prediction 
 lasso.pred <- predict(lasso.fit$finalModel, 
@@ -264,6 +265,7 @@ enet.fit <- train(x, y,
                                                           length = 50))),
                   trControl = ctrl1)
 # select optimal tuning parameter
+#enet.fit$bestTune$lambda
 emet.tun.plt = ggplot(enet.fit)
 
 # prediction 
@@ -407,9 +409,9 @@ rf.mse = mean((rf.pred - y_test)^2)
 
 # --- boosting
 gbm.grid <- expand.grid(n.trees = c(1000,2000,3000), # B
-                        interaction.depth = 1:8, # d
+                        interaction.depth = 1:10, # d
                         shrinkage = c(0.0008,0.001,0.0012), # lambda
-                        n.minobsinnode = c(13,14)) # min # of obs in terminal nodes
+                        n.minobsinnode = c(13,14,15,16)) # min # of obs in terminal nodes
 
 set.seed(20210323)
 gbm.fit <- train(CRIM ~ . , 
@@ -474,7 +476,7 @@ model_compare =
 
 There were one or few tuning parameters for each of the models except the linear regression model. Within these models that require tuning parameters, we specified a grid of numbers and then selected the one that gave the smallest cross-validation error. We then compared each of these models with optimal tuning parameters and decided the final model based on their training performance, i.e., cross-validation RMSE. Both median and mean RMSEs are reasonable evaluation metrics for the selection of the final model. We discussed both metrics and determined the appropriate final model, which would be used to predict the crime rate. 
 
-Figure 4 displays the distribution of the training errors (in black) of each of the models that we considered in this project. We can see that both random forest (rf) model and boosting (gmb) model performed well compared to the other models. Both models have similar performance using the training data; the random forest model has a slightly larger mean RMSE but a smaller median RMSE than the boosting model. As there is extreme value in RMSE, median RMSE can be a more appropriate criterion as it is insensitive to extreme values whereas mean is. Hence, we decided to use the random forest model, which has a smaller median RMSE, as our final model. 
+Figure 4 displays the distribution of the training errors (in black) of each of the models that we considered in this project. We can see that both random forest (rf) model and boosting (gbm) model performed well compared to the other models. Both models have similar performance using the training data; the random forest model has a slightly larger mean RMSE but a smaller median RMSE than the boosting model. As there is extreme value in RMSE, median RMSE can be a more appropriate criterion as it is insensitive to extreme values whereas mean is. Hence, we decided to use the random forest model, which has a smaller median RMSE, as our final model. 
 
 We also evaluated the test performance of the models in the form of mean RMSE as displayed in Figure 4 (in orange). We can observe that among all the models, regression tree (rpart) model has the smallest test error, followed by boosting model (gbm), MARS model (mars), and random forest model (rf). Our selected final model, the random forest model, has its test error (mean RMSE) close to its training error (mean RMSE). This is desirable and it indicates that random forest model seems to have a consistently reliable predictive ability. Therefore, our decision of choosing random forest model looks reasonable and random forest seems to be flexible enough to make the prediction and able to successfully capture the non-linearity between the predictors and the crime rate. 
 
@@ -511,35 +513,45 @@ var_descpt
 ```{r var_distn}
 var_distn
 ```
-\center __Figure 1__ Variable Distribution (Training Dataset) \center
+\begin{center}
+$\bf{Figure \ 1.}$ \ Variable Distribution (Training Dataset)
+\end{center}
 
 \pagebreak
 
 ```{r ctns_var_vs_crime}
 scat_plt 
 ```
-\center __Figure 2A__ Scatter Plot of Continuous Variable vs. Crime Rate (Training Dataset) \center
+\begin{center}
+$\bf{Figure \ 2A.}$ \ Scatter Plot of Continuous Variables vs. Crime Rate (Training Dataset)
+\end{center}
 
 \pagebreak
 
 ```{r cat_var_vs_crime}
 box_plt
 ```
-\center __Figure 2B__ Boxplot of Categorical Variable vs. Crime Rate (Training Dataset) \center
+\begin{center}
+$\bf{Figure \ 2B.}$ \ Boxplot of the Categorical Variable CHAS vs. Crime Rate (Training Dataset)
+\end{center}
 
 \pagebreak
 
 ```{r cor_plt}
 corrplot(cor(data0[trRows,]), method = "circle", type = "full", tl.cex = 0.53)
 ```
-\center __Figure 3__ Correlation Plot (Training Dataset) \center
+\begin{center}
+$\bf{Figure \ 3.}$ \ Correlation Plot (Training Dataset)
+\end{center}
 
 \pagebreak
 
 ```{r model_compare}
 model_compare
 ```
-\center __Figure 4__ Predictive Performance of All Models  \center
+\begin{center}
+$\bf{Figure \ 4.}$ \ Predictive Performance of All Models
+\end{center}
 
 \pagebreak
 
@@ -547,7 +559,10 @@ model_compare
 ```{r}
 
 ```
-\center __Figure 5__ The Variable Importance Plot (VIP), Partial Dependence Plots (PDP), Individual Conditional Expectation (ICE) Curves from Random Forest Model (Final Model) \center
+\begin{center}
+$\bf{Figure \ 5.}$ \ The Variable Importance Plot (VIP), Partial Dependence Plots (PDP), Individual Conditional Expectation (ICE) Curves from Random Forest Model (Final Model)
+\end{center}
+
 
 
 \newpage
@@ -560,66 +575,74 @@ Since Linear Model has a closed form solution, we did not need to tune parameter
 
 ## 2. Ridge Model
 
-We tuned 100 lambda values in between $e^2$ to $e^{-3}$. From the graphical output below, the lambda value with the smallest cross-validation RMSE lies between 0 and 1.
+We tuned 100 lambda values in between $e^2$ to $e^{-3}$. From the graphical output below, the lambda value with the smallest cross-validation RMSE is `r round(ridge.fit$bestTune$lambda,2)`, with a corresponding log value `r round(log(ridge.fit$bestTune$lambda),2)` on the plot. 
 
 ```{r}
-set.seed(20210323)
-# select optimal tuning parameter
-
-# --- linear model
-
 # --- ridge 
+#ridge.fit$bestTune$lambda
 ridge.tun.plt = plot(ridge.fit, xTrans = log); ridge.tun.plt
 ```
-\center __Figure 1__ Tuning Lamda of Ridge Model \center
+\begin{center}
+$\bf{Figure \ A1.}$ \ Tuning Lambda of Ridge Model
+\end{center}
 
 \pagebreak
 
 ## 3. Lasso Model
  
-We tuned 100 lambda values in between $e$ to $e^{-5}$. From the graphical output below, the best lambda value with the smallest cross-validation RMSE lies between -1 to 0.
+We tuned 100 lambda values in between $e$ to $e^{-5}$. From the graphical output below, the best lambda value with the smallest cross-validation RMSE is `r round(lasso.fit$bestTune$lambda,2)`, with a corresponding log value `r round(log(lasso.fit$bestTune$lambda),2)` on the plot.
 
 ```{r}
 # --- lasso
+#lasso.fit$bestTune$lambda
 lasso.tun.plt = plot(lasso.fit, xTrans = log); lasso.tun.plt
 ```
-\center __Figure 2__ Tuning Lamda of Lasso Model \center
+\begin{center}
+$\bf{Figure \ A2.}$ \ Tuning Lambda of Lasso Model
+\end{center}
 
 \pagebreak
 
-## 4. Elastic Net 
+## 4. Elastic Net Model
 
 We tuned 5 alpha values in between 0 to 1, and tuned 50 lambda values in between $e^{-10}$ to $e^{-3}$. From the graphical output below we can see alpha = 0 (ridge model) has significant lower cross-validation RMSE compared with other alpha values.
 
 ```{r}
 # --- Elastic net
+#enet.fit$bestTune
 emet.tun.plt = ggplot(enet.fit); emet.tun.plt
 ```
-\center __Figure 3__ Tuning alpha and Lamda of Elastic Net Model \center
+\begin{center}
+$\bf{Figure \ A3.}$ \ Tuning Alpha and Lambda of Elastic Net Model
+\end{center}
 
 \pagebreak
 
 ## 5. PCR Model
 
-We tuned 12 components and the following graph shows the optimal components number is 8.
+We tuned 13 components and the following graph shows that the optimal components number is 13.
 
 ```{r}
 # --- pcr
 pcr.tun.plt = ggplot(pcr.fit, highlight = TRUE); pcr.tun.plt
 ```
-\center __Figure 4__ Tuning Optimal Components of PCR Model \center
+\begin{center}
+$\bf{Figure \ A4.}$ \ Tuning Optimal Components of PCR Model
+\end{center}
 
 \pagebreak
 
 ## 6. PLS Model
 
-We tuned 12 components and the following graph shows the optimal components number is 10.
+We tuned 13 components and the following graph shows that the optimal components number is 10.
 
 ```{r}
 # --- pls
 pls.tun.plt = ggplot(pls.fit, highlight = TRUE); pls.tun.plt
 ```
-\center __Figure 5__ Tuning Optimal Components of PLS Model \center
+\begin{center}
+$\bf{Figure \ A5.}$ \ Tuning Optimal Components of PLS Model 
+\end{center}
 
 \pagebreak
 
@@ -629,25 +652,31 @@ The GAM model did not provide us the way to tune the parameter. The function aut
 
 ## 8. MARS Model
 
-We tuned the degree from 1 to 3 and the value of nprune from 2 to 22. The best model with the smallest cross-validation RMSE is with nprune = 9 and degree = 2.
+We tuned the maximum degree of interaction (degree) from 1 to 3 and the maximum number of terms (including intercept) in the pruned model (nprune) from 2 to 22. The best model with the smallest cross-validation RMSE is with nprune = 9 and  degree = 2.
 
 ```{r}
 # --- MARS model
+#mars.fit$bestTune
 mars.tun.plt = ggplot(mars.fit); mars.tun.plt
 ```
-\center __Figure 6__ Tuning MARS Model \center
+\begin{center}
+$\bf{Figure \ A6.}$ \ Tuning MARS Model
+\end{center}
 
 \pagebreak
 
 ## 9. Regression Tree Model
 
-We tuned 50 Complexity Parameters from $e^{-6}$ to $e^{-3}$. The model with the smallest cross-validation RMSE is with cp = 0.01376379.
+We tuned 50 Complexity Parameters (cp, the minimum improvement in the model needed at each node) from $e^{-6}$ to $e^{-3}$. The model with the smallest cross-validation RMSE is with cp = 0.01376379.
 
 ```{r}
 # --- regression tree
+#rpart.fit$bestTune
 rpart.tun.plt = ggplot(rpart.fit, highlight = TRUE); rpart.tun.plt
 ```
-\center __Figure 7__ Tuning Complexity Parameter of Regression Tree Model \center
+\begin{center}
+$\bf{Figure \ A7.}$ \ Tuning Complexity Parameter of Regression Tree Model 
+\end{center}
 
 \newpage
 
@@ -660,34 +689,43 @@ We tuned the 50 mincriterion values from $1 - e^{-5}$ to $1 - e^{-3}$. The model
 ctree.tun.plt = ggplot(ctree.fit, highlight = TRUE); ctree.tun.plt
 # ctree.fit$bestTune
 ```
-\center __Figure 8__ Tuning Mincriterion of Conditional Inference Tree Model \center
+\begin{center}
+$\bf{Figure \ A8.}$ \ Tuning Mincriterion of Conditional Inference Tree Model
+\end{center}
 
 \pagebreak
 
-<p align="left">诶嘿</p>## 11. Random Forest Model
+## 11. Random Forest Model
 
-We tuned number of selected variable at each split from 1 to 13, and tuned the minimum node size from 
-1 to 6. The model with the smallest cross-validation RMSE is with number of selected variable at each split equal to 1 and minimum node size equal to 4.
+We tuned number of selected variable at each split from 1 to 13, and tuned the minimum node size from 1 to 6. The model with the smallest cross-validation RMSE is with number of selected variable at each split equal to 1 and minimum node size equal to 4.
 
 ```{r}
 # --- random forest (bagging at mtry = 13)
 rf.tun.plt = ggplot(rf.fit, highlight = TRUE); rf.tun.plt
 # rf.fit$bestTune
 ```
-\center __Figure 9__ Tuning Random Forest Model \center
+\begin{center}
+$\bf{Figure \ A9.}$ \ Tuning Random Forest Model
+\end{center}
 
 \pagebreak
 
 ## 12. Boosting Model
 
-We tuned number of trees with value equal to 1000, 2000 and 3000, tuned interaction depth with value in between 1 to 8, tuned shrinkage value equal to 0.0008, 0.001, and 0.0012, and tuned minimum number of observations in terminal nodes equal to 13 and 14. 
+We tuned the number of trees (n.trees) with values equal to 1000, 2000 and 3000, tuned the maximum depth of each tree (interaction.depth), with value in between 1 to 10, tuned shrinkage parameter values equal to 0.0008, 0.001, and 0.0012, and tuned minimum number of observations in terminal nodes (n.minobsinnode) from 13 to 16. 
 
-The model with the smallest cross-validation RMSE is with n.trees = 2000, interaction.depth = 8, shrinkage = 0.001, and n.minobsinnode = 14.
+The model with the smallest cross-validation RMSE is with n.trees = 2000, interaction.depth = 6, shrinkage = 0.001, and n.minobsinnode = 15.
 
 ```{r}
 # --- boosting
 gbm.tun.plt = ggplot(gbm.fit, highlight = TRUE); gbm.tun.plt
 # gbm.fit$bestTune
 ```
-\center __Figure 10__ Tuning Boosting Model \center
+\begin{center}
+$\bf{Figure \ A10.}$ \ Tuning Boosting Model 
+\end{center}
+
+
+
+
 
