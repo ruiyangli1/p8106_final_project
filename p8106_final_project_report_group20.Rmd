@@ -667,7 +667,7 @@ $\bf{Figure \ A6.}$ \ Tuning MARS Model
 
 ## 9. Regression Tree Model
 
-We tuned 50 Complexity Parameters (cp, the minimum improvement in the model needed at each node) from $e^{-6}$ to $e^{-3}$. The model with the smallest cross-validation RMSE is with cp = 0.01376379.
+We tuned 50 values of Complexity Parameters (cp, the minimum improvement in the model needed at each node) from $e^{-6}$ to $e^{-3}$. The model with the smallest cross-validation RMSE is with cp = 0.01376379.
 
 ```{r}
 # --- regression tree
@@ -682,7 +682,7 @@ $\bf{Figure \ A7.}$ \ Tuning Complexity Parameter of Regression Tree Model
 
 ## 10. Conditional Inference Tree Model
 
-We tuned the 50 mincriterion values from $1 - e^{-5}$ to $1 - e^{-3}$. The model with the smallest cross-validation RMSE is with mincriterion = 0.9779915.
+We tuned 50 values of the minimum criterion for a split (mincriterion) from $1 - e^{-5}$ to $1 - e^{-3}$. The model with the smallest cross-validation RMSE is with mincriterion = 0.9779915.
 
 ```{r}
 # --- conditional inference tree model
@@ -697,7 +697,7 @@ $\bf{Figure \ A8.}$ \ Tuning Mincriterion of Conditional Inference Tree Model
 
 ## 11. Random Forest Model
 
-We tuned number of selected variable at each split from 1 to 13, and tuned the minimum node size from 1 to 6. The model with the smallest cross-validation RMSE is with number of selected variable at each split equal to 1 and minimum node size equal to 4.
+We tuned the number of selected variable at each split from 1 to 13, and tuned the minimum node size from 1 to 6. The model with the smallest cross-validation RMSE is with number of selected variable at each split equal to 1 and minimum node size equal to 4.
 
 ```{r}
 # --- random forest (bagging at mtry = 13)
@@ -712,7 +712,7 @@ $\bf{Figure \ A9.}$ \ Tuning Random Forest Model
 
 ## 12. Boosting Model
 
-We tuned the number of trees (n.trees) with values equal to 1000, 2000 and 3000, tuned the maximum depth of each tree (interaction.depth), with value in between 1 to 10, tuned shrinkage parameter values equal to 0.0008, 0.001, and 0.0012, and tuned minimum number of observations in terminal nodes (n.minobsinnode) from 13 to 16. 
+We tuned the number of trees (n.trees) with values equal to 1000, 2000 and 3000, tuned the maximum depth of each tree (interaction.depth) with values from 1 to 10, tuned the shrinkage parameter with values equal to 0.0008, 0.001, and 0.0012, and tuned the minimum number of observations in terminal nodes (n.minobsinnode) from 13 to 16. 
 
 The model with the smallest cross-validation RMSE is with n.trees = 2000, interaction.depth = 6, shrinkage = 0.001, and n.minobsinnode = 15.
 
