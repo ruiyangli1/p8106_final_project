@@ -32,11 +32,11 @@ Public safety has always been one of the most concerns in our daily lives. A saf
 
 ## Data
 
-The dataset that we used in this project can be assessed from the StatLib library which is maintained at Carnegie Mellon University. It contains information about various factors that could potentially explain crime rate from 506 observations. This dataset has already been cleaned. The detailed description of each variables is displayed in Table 1. The outcome of interest is the per capita crime rate. 
+The dataset that we used in this project can be assessed from the StatLib library which is maintained at Carnegie Mellon University. It contains information about 14 variables that could potentially explain crime rate from 506 observations. 13 out of 14 variables are continuous variables, and the variable CHAS is a dichotomous variable, which has been converted to the factor type. The detailed description of each variables is displayed in Table 1. The outcome of interest is the per capita crime rate (CRIM), and the remaining 13 variables are the predictors. 
 
-We randomly split our dataset into a training dataset (75%) and a test dataset (25%). We performed model fitting and model selection on the training dataset and evaluated its test performance on the test dataset. 
+This dataset has already been cleaned and does not contain missing or duplicated values. If there are missing values, we may consider using r functions like `na.omit` or `drop_na()` to remove them. The distribution of each predictor variable can be seen in Figure 1. After careful consideration, we decided not to perform transformations in order to maintain the interpretability of the predictors.
 
-There were no missing or duplicated observations in our data and the distribution of each predictor variable can be seen in Figure 1. After careful consideration, we decided not to perform transformations in order to maintain the interpretability of the predictors.
+We used `createDataPartition()` function to randomly split our dataset into a training dataset (75%) and a test dataset (25%). We performed model fitting and model selection on the training dataset and evaluated its test performance on the test dataset. 
 
 ```{r 1.df}
 # Import dataset
@@ -193,9 +193,17 @@ corplt =
 
 ## Model Determination
 
-We used crime rate as our response variable and all the remaining variables as the predictors. Since crime rate is a continuous outcome, we performed the modeling under the regression framework. Our earlier exploratory findings suggested that there seemed to be some non-linear association between the predictors and the outcome. Therefore, we considered both linear and non-linear models during the modeling process. Specifically, we fitted linear models including multiple linear regression, LASSO, ridge, elastic net, principal component regression (PCR), and partial least squares (PLS) model, and non-linear models such as generalized additive model (GAM), multivariate adaptive regression splines (MARS), regression tree, conditional inference tree, random forests, and boosting. 
+There are no missing values among all the variables. We checked through all the variables to see if there is any near zero variance predictor using the `nearZeroVar` function in the datasets before and after splitting, and the result shows there does not exist near zero variance predictors. Therefore, we used crime rate as our response variable and all the remaining variables as the predictors. 
+
+Since crime rate is a continuous outcome, we performed the modeling under the regression framework. Our earlier exploratory findings suggested that there seemed to be some non-linear association between the predictors and the outcome. Therefore, we considered both linear and non-linear models during the modeling process. Specifically, we fitted linear models including multiple linear regression, LASSO, ridge, elastic net, principal component regression (PCR), and partial least squares (PLS) model, and non-linear models such as generalized additive model (GAM), multivariate adaptive regression splines (MARS), regression tree, conditional inference tree, random forests, and boosting. 
 
 ```{r 3.models,include=FALSE}
+
+# check near zero variance predictors
+# nearZeroVar(data)
+# nearZeroVar(x)
+# nearZeroVar(x_test)
+
 # Model fitting 
 
 # resampling method
