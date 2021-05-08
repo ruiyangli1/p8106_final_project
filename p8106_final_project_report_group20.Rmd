@@ -494,7 +494,7 @@ Based on the variable importance plot (VIP) in Figure 5 (first plot), RAD, DIS, 
 
 # Discussion 
 
-We did not perform transformations on the predictors due to the concern of interpretability. Through transformation might compromise the interpretability, it could possibly improve model performance. Future research could consider applying transformation on predictors. 
+We did not perform transformations on the predictors due to the concern of interpretability. Though transformation might compromise the interpretability, it could possibly improve model performance. Future research could consider applying transformation on predictors. 
 
 [**TO BE MODIFIED** Overall, our model suggests that accessibility to radial highways, distances to employment centers, and the median value of owner-occupied homes are the top 3 variables that play an important role in predicting the crime rate. Specifically, the crime rate is predicted to start to increase with the accessibility to radial highways when the index of latter exceeds 8, to decrease if the distance to employment centers is farther, and to decreases with the median home value overall -- it decreases faster if the median is below 17.4k compared to after 17.4k. These findings are consistent with our natural understanding and expectation and provide meaningful insight into public safety. Therefore, the policymaker or authority might consider making more effort in these forehead mentioned areas to reduce the crime rate and protect the overall population. ]
 
@@ -579,7 +579,7 @@ We tuned 100 lambda values in between $e^2$ to $e^{-3}$. From the graphical outp
 
 ```{r}
 # --- ridge 
-#ridge.fit$bestTune$lambda
+# ridge.fit$bestTune$lambda
 ridge.tun.plt = plot(ridge.fit, xTrans = log); ridge.tun.plt
 ```
 \begin{center}
@@ -648,7 +648,7 @@ $\bf{Figure \ A5.}$ \ Tuning Optimal Components of PLS Model
 
 ## 7. GAM
 
-The GAM model did not provide us the way to tune the parameter. The function automatically returned the most optimal model.
+The GAM model did not provide us the way to tune the parameters. The function automatically returned the most optimal model.
 
 ## 8. MARS Model
 
