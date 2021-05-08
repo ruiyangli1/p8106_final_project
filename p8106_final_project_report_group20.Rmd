@@ -479,14 +479,14 @@ model_compare =
   geom_point(data = test_error, 
              aes(x = RMSE), color = "#d95f02", 
              shape = 20, size = 2) + 
-  labs(caption = "Orange point: mean RMSE from test data")
+  labs(caption = "Orange point: RMSE from test data")
 ```
 
 There were one or few tuning parameters for each of the models except the linear regression model. Within these models that require tuning parameters, we specified a grid of numbers and then selected the one that gave the smallest cross-validation error. We then compared each of these models with optimal tuning parameters and decided the final model based on their training performance, i.e., cross-validation RMSE. Both median and mean RMSEs are reasonable evaluation metrics for the selection of the final model. We discussed both metrics and determined the appropriate final model, which would be used to predict the crime rate. 
 
 Figure 4 displays the distribution of the training errors (in black) of each of the models that we considered in this project. We can see that both random forest (rf) model and boosting (gbm) model performed well compared to the other models. Both models have similar performance using the training data; the random forest model has a slightly larger mean RMSE but a smaller median RMSE than the boosting model. As there is extreme value in RMSE, median RMSE can be a more appropriate criterion as it is insensitive to extreme values whereas mean is. Hence, we decided to use the random forest model, which has a smaller median RMSE, as our final model. 
 
-We also evaluated the test performance of the models in the form of mean RMSE as displayed in Figure 4 (in orange). We can observe that among all the models, regression tree (rpart) model has the smallest test error, followed by boosting model (gbm), MARS model (mars), and random forest model (rf). Our selected final model, the random forest model, has its test error (mean RMSE) close to its training error (mean RMSE). This is desirable and it indicates that random forest model seems to have a consistently reliable predictive ability. Therefore, our decision of choosing random forest model looks reasonable and random forest seems to be flexible enough to make the prediction and able to successfully capture the non-linearity between the predictors and the crime rate. 
+We also evaluated the test performance of the models in the form of RMSE as displayed in Figure 4 (in orange). We can observe that among all the models, regression tree (rpart) model has the smallest test error, followed by boosting model (gbm), MARS model (mars), and random forest model (rf). Our selected final model, the random forest model, has its test error (RMSE) close to its training error (mean RMSE). This is desirable and it indicates that random forest model seems to have a consistently reliable predictive ability. Therefore, our decision of choosing random forest model looks reasonable and random forest seems to be flexible enough to make the prediction and able to successfully capture the non-linearity between the predictors and the crime rate. 
 
 ## Model Interpretation 
 
