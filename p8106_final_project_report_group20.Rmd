@@ -699,7 +699,7 @@ var_descpt
 
 \pagebreak
 
-```{r var_distn}
+```{r var_distn, fig.height= 7,fig.width= 9}
 var_distn
 ```
 \begin{center}
@@ -756,7 +756,7 @@ $\bf{Figure \ 5B.}$ \ The Individual Conditional Expectation (ICE) Curves from R
 
 \pagebreak
 
-```{r lime_plt}
+```{r lime_plt, fig.height= 9, fig.width= 8}
 plot_explanations(explanation.obs)
 ```
 \begin{center}
