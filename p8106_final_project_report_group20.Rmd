@@ -662,7 +662,7 @@ ice13.rf <- rf.fit %>%
            center = TRUE)
 ```
 
-For example, the crime rate seems to mildly fluctuate when the median value of owner-occupied homes (MEDV) is below 10 thousand dollars. It quickly decreases when the median value is between 10 and 12 thousand dollars, and slowly decreases when the median value is greater than 12 thousand dollars. When the median value exceeds 17 thousand dollars, the crime rate becomes stable. Similarly, we can see that the crime rate seems to first decrease with weighted distances to five Boston employment centers (DIS) and then remain stable after the weighted distances is around 1.9. Overall, the per capita crime rate seems to be stable when the index of accessibility to radial highways (RAD) is below 14. It starts to slowly increase after the index exceeds 14, and quickly jumps up when the index is around 16. However, when the index is greater than 16, the per capita crime rate seems to become stable again. Furthermore, we can see that the crime rate seems to be relatively stable when the full-value property-tax rate per $10,000 (TAX) is below 540, and it increases when TAX is between 540 and 570. After remaining stable when TAX is between 570 and 680, the crime rate decreases a little and then becomes stable again then TAX exceeds 690. In addition, the per capita crime rate seems to quickly decrease when the index of proportion of blacks by town (B) is below 20, and it slowly decreases when the index B is greater than 20.
+For example, the crime rate seems to mildly fluctuate when the median value of owner-occupied homes (MEDV) is below 10 thousand dollars. It quickly decreases when the median value is between 10 and 12 thousand dollars, and slowly decreases when the median value is greater than 12 thousand dollars. When the median value exceeds 17 thousand dollars, the crime rate becomes stable. Similarly, we can see that the crime rate seems to first decrease with weighted distances to five Boston employment centers (DIS) and then remain stable after the weighted distances is around 1.9. Overall, the per capita crime rate seems to be stable when the index of accessibility to radial highways (RAD) is below 14. It starts to slowly increase after the index exceeds 14, and quickly jumps up when the index is around 16. However, when the index is greater than 16, the per capita crime rate seems to become stable again. Furthermore, we can see that the crime rate seems to be relatively stable when the full-value property-tax rate per $10,000 (TAX) is below 540, and it increases when TAX is between 540 and 570. After remaining stable when TAX is between 570 and 680, the crime rate decreases a little and then becomes stable again when TAX exceeds 690. In addition, the per capita crime rate seems to quickly decrease when the index of proportion of blacks by town (B) is below 20, and it slowly decreases when the index B is greater than 20.
 
 
 # Discussion 
@@ -692,20 +692,13 @@ $\bf{Figure \ 1.}$ \ Variable Distribution (Training Dataset)
 
 \pagebreak
 
-```{r ctns_var_vs_crime}
-scat_plt 
+```{r ctns_var_vs_crime, fig.height= 9, fig.width= 8}
+library(cowplot)
+figure <- plot_grid(scat_plt, box_plt, align = "v", nrow = 2, rel_heights = c(2/3, 1/3))
+figure
 ```
 \begin{center}
-$\bf{Figure \ 2A.}$ \ Scatter Plot of Continuous Variables vs. Crime Rate (Training Dataset)
-\end{center}
-
-\pagebreak
-
-```{r cat_var_vs_crime}
-box_plt
-```
-\begin{center}
-$\bf{Figure \ 2B.}$ \ Boxplot of the Categorical Variable CHAS vs. Crime Rate (Training Dataset)
+$\bf{Figure \ 2.}$ \ Variables vs. Crime Rate (Training Dataset)
 \end{center}
 
 \pagebreak
