@@ -18,6 +18,8 @@ library(caret)
 library(corrplot)
 library(patchwork)
 library(rpart.plot)    # for visualization, tree diagrams
+library(vip)
+library(pdp)
 
 theme_set(theme_bw())
 ```
@@ -144,6 +146,7 @@ var_distn =
   scale_color_manual(values = c("#999999", "#E69F00", "#56B4E9")) + 
   theme_bw() 
 ```
+
 
 # Exploratory Analysis/Visualization
 
@@ -439,7 +442,7 @@ gbm.pred <- predict(gbm.fit, newdata = data_test)
 gbm.mse = mean((gbm.pred - y_test)^2)
 ```
 
-```{r 3.model_compare}
+```{r 4.model_compare}
 ### Model comparison
 
 resamp <- resamples(list(lm = lm.fit, 
@@ -540,7 +543,6 @@ There were one or few tuning parameters for each of the models except the linear
 
 (12) Boosting Model: We tuned the number of trees (n.trees) with values equal to 1000, 2000 and 3000, tuned the maximum depth of each tree (interaction.depth) with values from 1 to 10, tuned the shrinkage parameter with values equal to 0.0008, 0.001, and 0.0012, and tuned the minimum number of observations in terminal nodes (n.minobsinnode) from 13 to 16. The model with the smallest cross-validation RMSE is with n.trees = 2000, interaction.depth = 6, shrinkage = 0.001, and n.minobsinnode = 15. (see Figure A10 in the appendix)
 
-
 ## Model Summary
 
 Figure 4 displays the distribution of the training errors (in black) of each of the models that we considered in this project. We can see that both random forest (rf) model and boosting (gbm) model performed well compared to the other models. Both models have similar performance using the training data; the random forest model has a slightly larger mean RMSE but a smaller median RMSE than the boosting model. As there is extreme value in RMSE, median RMSE can be a more appropriate criterion as it is insensitive to extreme values whereas mean is. Hence, we decided to use the random forest model, which has a smaller median RMSE, as our final model. 
@@ -549,21 +551,125 @@ We also evaluated the test performance of the models in the form of RMSE as disp
 
 ## Final Model Interpretation 
 
-By the nature of random forest model, no specific assumption is made with regard to the functional relationship between the response variable and the predictor variables. As blackbox models, the random forest model does not have an explicit form. However, it can be interpreted, both globally and locally, using visualization tools. 
+By the nature of random forest model, no specific assumption is made with regard to the functional relationship between the response variable and the predictor variables. As a black-box model, the random forest model does not have an explicit form. However, it can be interpreted, both globally and locally, using visualization tools. Based on the variable importance plot (VIP) in Figure 5A, MEDV, DIS, RAD, TAX, and B are the top 5 variables of importance in predicting the crime rate. The individual conditional expectation (ICE) curves (Figure 5B) illustrate how these variables impact the prediction of the response variable. 
 
-```{r 3.model_visualization}
+```{r 5.final_model_visualization,include=FALSE}
+# Variable Importance Plot
+set.seed(20210323)
+vip_plot =
+  vip(rf.fit,
+      method = "permute", 
+      train = data_train,
+      target = "CRIM",
+      metric = "RMSE",
+      nsim = 100,
+      pred_wrapper = predict,
+      geom = "boxplot",
+      all_permutations = TRUE,
+      mapping = aes_string(fill = "Variable"),
+      num_features = 13)
 
+# Individual Conditional Expectation (ICE) curves
+ice1.rf <- rf.fit %>% 
+  partial(pred.var = "MEDV", 
+          grid.resolution = 100,
+          ice = TRUE) %>%
+  autoplot(train = data_train, alpha = .1, 
+           center = TRUE)
+
+ice2.rf <- rf.fit %>% 
+  partial(pred.var = "DIS", 
+          grid.resolution = 100,
+          ice = TRUE) %>%
+  autoplot(train = data_train, alpha = .1, 
+           center = TRUE)
+
+ice3.rf <- rf.fit %>% 
+  partial(pred.var = "RAD", 
+          grid.resolution = 100,
+          ice = TRUE) %>%
+  autoplot(train = data_train, alpha = .1, 
+           center = TRUE)
+
+ice4.rf <- rf.fit %>% 
+  partial(pred.var = "TAX", 
+          grid.resolution = 100,
+          ice = TRUE) %>%
+  autoplot(train = data_train, alpha = .1, 
+           center = TRUE) 
+
+ice5.rf <- rf.fit %>% 
+  partial(pred.var = "B", 
+          grid.resolution = 100,
+          ice = TRUE) %>%
+  autoplot(train = data_train, alpha = .1, 
+           center = TRUE)
+
+ice6.rf <- rf.fit %>% 
+  partial(pred.var = "PTRATIO", 
+          grid.resolution = 100,
+          ice = TRUE) %>%
+  autoplot(train = data_train, alpha = .1, 
+           center = TRUE)
+
+ice7.rf <- rf.fit %>% 
+  partial(pred.var = "AGE", 
+          grid.resolution = 100,
+          ice = TRUE) %>%
+  autoplot(train = data_train, alpha = .1, 
+           center = TRUE)
+
+ice8.rf <- rf.fit %>% 
+  partial(pred.var = "NOX", 
+          grid.resolution = 100,
+          ice = TRUE) %>%
+  autoplot(train = data_train, alpha = .1, 
+           center = TRUE)
+
+ice9.rf <- rf.fit %>% 
+  partial(pred.var = "LSTAT", 
+          grid.resolution = 100,
+          ice = TRUE) %>%
+  autoplot(train = data_train, alpha = .1, 
+           center = TRUE)
+
+ice10.rf <- rf.fit %>% 
+  partial(pred.var = "INDUS", 
+          grid.resolution = 100,
+          ice = TRUE) %>%
+  autoplot(train = data_train, alpha = .1, 
+           center = TRUE)
+
+ice11.rf <- rf.fit %>% 
+  partial(pred.var = "RM", 
+          grid.resolution = 100,
+          ice = TRUE) %>%
+  autoplot(train = data_train, alpha = .1, 
+           center = TRUE)
+
+ice12.rf <- rf.fit %>% 
+  partial(pred.var = "ZN", 
+          grid.resolution = 100,
+          ice = TRUE) %>%
+  autoplot(train = data_train, alpha = .1, 
+           center = TRUE)
+
+ice13.rf <- rf.fit %>% 
+  partial(pred.var = "CHAS", 
+          grid.resolution = 100,
+          ice = TRUE) %>%
+  autoplot(train = data_train, alpha = .1, 
+           center = TRUE)
 ```
 
+For example, the crime rate seems to mildly fluctuate when the median value of owner-occupied homes (MEDV) is below 10 thousand dollars. It quickly decreases when the median value is between 10 and 12 thousand dollars, and slowly decreases when the median value is greater than 12 thousand dollars. When the median value exceeds 17 thousand dollars, the crime rate becomes stable. Similarly, we can see that the crime rate seems to first decrease with weighted distances to five Boston employment centers (DIS) and then remain stable after the weighted distances is around 1.9. Overall, the per capita crime rate seems to be stable when the index of accessibility to radial highways (RAD) is below 14. It starts to slowly increase after the index exceeds 14, and quickly jumps up when the index is around 16. However, when the index is greater than 16, the per capita crime rate seems to become stable again. Furthermore, we can see that the crime rate seems to be relatively stable when the full-value property-tax rate per $10,000 (TAX) is below 540, and it increases when TAX is between 540 and 570. After remaining stable when TAX is between 570 and 680, the crime rate decreases a little and then becomes stable again then TAX exceeds 690. In addition, the per capita crime rate seems to quickly decrease when the index of proportion of blacks by town (B) is below 20, and it slowly decreases when the index B is greater than 20.
 
-[**TO BE MODIFIED**
-Based on the variable importance plot (VIP) in Figure 5 (first plot), RAD, DIS, MEDV, LSTAT, and AGE are the top 5 variables of importance in predicting the crime rate. The partial dependence plots (PDP) (Figure 5) illustrate how these variables impact the prediction of the response variable. For example, PDP of RAD implies that our model found that one knot (at 8) in RAD provides the best fit. Specifically, the per capita crime rate seems to be stable when the index of accessibility to radial highways is below 8 but it starts to increase after the index exceeds 8. Similarly, we can see that the crime rate seems to first decrease with weighted distances to five Boston employment centers (DIS) and remain stable after around 2.20. Overall, the crime rate seems to decrease for the median value of owner-occupied homes, but it decreases fastest when the median value is below 13.8, second fastest when the median value is from 13.8k to 17.4k, and the slowest when the median value exceeds 17.4k. The crime rate seems to decrease with the percentage of the lower status of the population and remaining stable after around 23.24%. ]
 
 # Discussion 
 
 We did not perform transformations on the predictors due to the concern of interpretability. Though transformation might compromise the interpretability, it could possibly improve model performance. Future research could consider applying transformation on predictors. 
 
-[**TO BE MODIFIED** Overall, our model suggests that accessibility to radial highways, distances to employment centers, and the median value of owner-occupied homes are the top 3 variables that play an important role in predicting the crime rate. Specifically, the crime rate is predicted to start to increase with the accessibility to radial highways when the index of latter exceeds 8, to decrease if the distance to employment centers is farther, and to decreases with the median home value overall -- it decreases faster if the median is below 17.4k compared to after 17.4k. These findings are consistent with our natural understanding and expectation and provide meaningful insight into public safety. Therefore, the policymaker or authority might consider making more effort in these forehead mentioned areas to reduce the crime rate and protect the overall population. ]
+Overall, our model suggests that the median value of owner-occupied homes, distances to employment centers, and accessibility to radial highways are the top 3 variables that play an important role in predicting the crime rate. Specifically, the crime rate is predicted to decrease with higher median home value, to decrease if the distance to employment centers is farther, and to increase with the accessibility to radial highways when the index of latter exceeds 14. These findings are consistent with our natural understanding and expectation and provide meaningful insight into public safety. For example, communities with higher median home values may have better security facilities, which leads to lower crime rate. Moreover, longer distance to employment centers may discourage the criminals of those centers from traveling to the communities. In addition, better accessibility to radial highways would allow the criminals to flee more easily, which could be a potential incentive for crimes. Therefore, the policymakers or authorities might consider making more effort in these forehead mentioned areas to reduce the crime rate and protect the overall population.
 
 
 \newpage
@@ -622,15 +728,22 @@ $\bf{Figure \ 4.}$ \ Predictive Performance of All Models
 
 \pagebreak
 
-**TO BE ADDED**
-```{r}
-
+```{r vip_plt}
+vip_plot
 ```
 \begin{center}
-$\bf{Figure \ 5.}$ \ The Variable Importance Plot (VIP), Partial Dependence Plots (PDP), Individual Conditional Expectation (ICE) Curves from Random Forest Model (Final Model)
+$\bf{Figure \ 5A.}$ \ The Variable Importance Plot (VIP) from Random Forest Model (Final Model)
 \end{center}
 
+\pagebreak
 
+```{r ice_curve}
+grid.arrange(ice1.rf, ice2.rf, ice3.rf, ice4.rf, ice5.rf, ice6.rf, ice7.rf,
+             ice8.rf, ice9.rf, ice10.rf, ice11.rf, ice12.rf, ice13.rf, nrow = 4)
+```
+\begin{center}
+$\bf{Figure \ 5B.}$ \ The Individual Conditional Expectation (ICE) Curves from Random Forest Model (Final Model)
+\end{center}
 
 \newpage
 
@@ -761,8 +874,6 @@ gbm.tun.plt = ggplot(gbm.fit, highlight = TRUE); gbm.tun.plt
 \begin{center}
 $\bf{Figure \ A10.}$ \ Tuning Boosting Model 
 \end{center}
-
-
 
 
 
