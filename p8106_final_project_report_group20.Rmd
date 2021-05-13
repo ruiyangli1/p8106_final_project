@@ -1,6 +1,6 @@
 ---
 title: "Predicting Crime Rate Within Boston Area"
-author: "Group 20"
+author: "Zhourong Li (zl2977), Cong Zhang (cz2612), Ruiyang Li (rl3034)"
 date: "5/13/2021"
 output: 
   pdf_document: 
@@ -153,7 +153,7 @@ var_distn =
 
 From the plot of each predictor versus crime rate (Figure 2), we can see that some variables seem to have nonlinear patterns with crime rate whereas others seem to have linear patterns. Therefore, it is reasonable to consider using non-linear models (e.g., GAM and MARS), tree-based methods (e.g., regression tree and conditional inference tree), and ensemble methods (e.g., random forests and boosting) to fit the data in addition to linear models. 
 
-We also examined the multi-collinearity among predictors. This is because if two predictors are highly correlated, it may undermine the statistical significance of the variable. From the correlation plot (Figure 3), we can observe that there are a number of predictors highly correlated with each other. For example, the per capita crime rate (CRIM) seems to have a high positive correlation with the index of accessibility to radial highways (RAD) and full-value property-tax rate per $10,000 (TAX). The weighted distances to five Boston employment centers (DIS) seem to have a high positive correlation with the proportion of residential land zoned for lots over 25,000 sq.ft. (ZN) and a high negative correlation with the proportion of non-retail business acres per town (INDUS), nitrogen oxideS concentration per 10 million (NOX), and proportion of owner-occupied units built prior to 1940 (AGE). The proportion of non-retail business acres per town (INDUS) and % lower status of the population (LSTAT) seem to be correlated with most predictors except for CHAS, the dummy variable indicating whether the tract of the Charles River bounds river. 
+We also examined the multi-collinearity among predictors. This is because if two predictors are highly correlated, it may undermine the statistical significance of the variables. From the correlation plot (Figure 3), we can observe that there are a number of predictors highly correlated with each other. For example, the per capita crime rate (CRIM) seems to have a high positive correlation with the index of accessibility to radial highways (RAD) and full-value property-tax rate per $10,000 (TAX). The weighted distances to five Boston employment centers (DIS) seem to have a high positive correlation with the proportion of residential land zoned for lots over 25,000 sq.ft. (ZN) and a high negative correlation with the proportion of non-retail business acres per town (INDUS), nitrogen oxideS concentration per 10 million (NOX), and proportion of owner-occupied units built prior to 1940 (AGE). The proportion of non-retail business acres per town (INDUS) and % lower status of the population (LSTAT) seem to be correlated with most predictors except for CHAS, the dummy variable indicating whether the tract of the Charles River bounds river. 
 
 We will explore more about the predicting abilities of these variables for crime rate in the following Models section. 
 
@@ -483,7 +483,7 @@ model_compare =
   geom_point(data = test_error, 
              aes(x = RMSE), color = "#d95f02", 
              shape = 20, size = 2) + 
-  labs(caption = "Orange point: RMSE from test data")
+  labs(caption = paste("Orange point: RMSE from test data","\n", "Black hollow point: mean RMSE from training data"))
 ```
 
 There were one or few tuning parameters for each of the models except the linear regression model. Within the models that require tuning parameters, we specified a grid of numbers and then selected the one that gave the smallest cross-validation RMSE value. We then compared each of these models with optimal tuning parameters and decided the final model based on their training performance, i.e., cross-validation RMSE. Both median and mean RMSEs are reasonable evaluation metrics for the selection of the final model. We discussed both metrics and determined the appropriate final model, which would be used to predict the crime rate. 
@@ -520,7 +520,7 @@ There were one or few tuning parameters for each of the models except the linear
 # summary(gbm.fit$finalModel)
 ```
 
-(1) Linear Regression: Since Linear Model has a closed form solution, we did not need to tune parameters for this model. At 5% significance level, there are 5 out of 13 predictors that are significant, they are ZN, DIS, RAD, B, and MEDV. 
+(1) Linear Regression: Since Linear Model has a closed form solution, we did not need to tune parameters for this model. At 5% significance level, there are 5 out of 13 predictors that are significant, which are ZN, DIS, RAD, B, and MEDV. 
 
 (2) Ridge Regression: We tuned 100 lambda values in between $e^2$ to $e^{-3}$. From Figure A1 in the Appendix, the lambda value with the smallest cross-validation RMSE is `r round(ridge.fit$bestTune$lambda,2)`, with a corresponding log value `r round(log(ridge.fit$bestTune$lambda),2)` on the plot. The Ridge model with the smallest cross-validation RMSE utilized all 13 predictors.
 
@@ -528,7 +528,7 @@ There were one or few tuning parameters for each of the models except the linear
 
 (4) Elastic Net Model: We tuned 5 alpha values in between 0 to 1, and tuned 50 lambda values in between $e^{-10}$ to $e^{-3}$. From Figure A3 in the Appendix we can see that alpha = 0 (ridge model) has significant lower cross-validation RMSE compared with other alpha values. The Elastic Net Model with the smallest cross-validation RMSE utilized all 13 predictors.
 
-(5) Principle component regression (PCR) model: We tuned the number of components from 1 to 13. Figure A4 in the Appendix shows the optimal components number is 13.
+(5) Principle Component Regression (PCR) Model: We tuned the number of components from 1 to 13. Figure A4 in the Appendix shows the optimal components number is 13.
 
 (6) Partial Least Squares (PLS) Model: We tuned the number of components from 1 to 13 and Figure A5 in the Appendix shows the optimal components number is 10.
 
@@ -546,9 +546,9 @@ There were one or few tuning parameters for each of the models except the linear
 
 ## Model Summary
 
-Figure 4 displays the distribution of the training errors (in black) of each of the models that we considered in this project. We can see that both random forest (rf) model and boosting (gbm) model performed well compared to the other models. Both models have similar performance using the training data; the random forest model has a slightly larger mean RMSE but a smaller median RMSE than the boosting model. As there is extreme value in RMSE, median RMSE can be a more appropriate criterion as it is insensitive to extreme values whereas mean is. Hence, we decided to use the random forest model, which has a smaller median RMSE, as our final model. 
+Figure 4 displays the distribution of the training errors (in black) of each of the models that we considered in this project. We can see that both random forest (rf) model and boosting (gbm) model performed well compared to the other models. Both models have similar performance using the training data; the random forest model has a slightly larger mean RMSE (black hollow point in Figure 4) but a smaller median RMSE than the boosting model. As there is extreme value in RMSE, median RMSE can be a more appropriate criterion as it is not sensitive to extreme values whereas mean is. Hence, we decided to use the random forest model, which has a smaller median RMSE, as our final model. 
 
-We also evaluated the test performance of the models in the form of RMSE as displayed in Figure 4 (in orange). We can observe that among all the models, regression tree (rpart) model has the smallest test error, followed by boosting model (gbm), MARS model (mars), and random forest model (rf). Our selected final model, the random forest model, has its test error (RMSE) close to its training error (mean RMSE). This is desirable and it indicates that random forest model seems to have a consistently reliable predictive ability. Therefore, our decision of choosing random forest model looks reasonable and random forest seems to be flexible enough to make the prediction and able to successfully capture the non-linearity between the predictors and the crime rate. 
+We also evaluated the test performance of the models in the form of RMSE as displayed in Figure 4 (in orange). We can observe that among all the models, regression tree (rpart) model has the smallest test error, followed by boosting model (gbm), MARS model (mars), and random forest model (rf). Our selected final model, the random forest model, has its test error (RMSE) close to its training error (mean RMSE). This is desirable and it indicates that random forest model seems to have a consistently reliable predictive ability. Therefore, our decision of choosing random forest model looks reasonable and random forest seems to be flexible enough to make the prediction and able to successfully capture the non-linear association between the predictors and the crime rate. 
 
 ## Final Model Interpretation 
 
